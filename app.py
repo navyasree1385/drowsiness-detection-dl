@@ -1,135 +1,39 @@
-from flask import Flask, render_template, Response
-import cv2
+from flask import Flask, render_template, request
 import tensorflow as tf
 import numpy as np
-import time
+import cv2
 import os
 
 app = Flask(__name__)
 
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Dropout
+# Load trained model
+model = tf.keras.models.load_model("model/drowsiness_model.h5", compile=False)
 
-model = Sequential([
+def prepare_image(image):
+    image = cv2.resize(image, (64, 64))
+    image = image / 255.0
+    image = np.expand_dims(image, axis=0)
+    return image
 
-    Conv2D(32,(3,3),activation="relu",input_shape=(64,64,3)),
-    MaxPooling2D(2,2),
-
-    Conv2D(64,(3,3),activation="relu"),
-    MaxPooling2D(2,2),
-
-    Conv2D(128,(3,3),activation="relu"),
-    MaxPooling2D(2,2),
-
-    Flatten(),
-
-    Dense(128,activation="relu"),
-    Dropout(0.5),
-
-    Dense(1,activation="sigmoid")
-])
-model.load_weights("model/drowsiness_weights.h5")
-
-# Haar Cascades
-face_cascade = cv2.CascadeClassifier(
-    cv2.data.haarcascades + "haarcascade_frontalface_default.xml"
-)
-
-eye_cascade = cv2.CascadeClassifier(
-    cv2.data.haarcascades + "haarcascade_eye.xml"
-)
-
-closed_start = None
-alarm_status = False
-
-def generate_frames():
-
-    global closed_start, alarm_status
-
-    cap = cv2.VideoCapture(0)
-
-    while True:
-
-        ret, frame = cap.read()
-
-        if not ret:
-            break
-
-        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-
-        status = "Open"
-        color = (0,255,0)
-        alarm = False
-
-        faces = face_cascade.detectMultiScale(gray,1.3,5)
-
-        for (fx,fy,fw,fh) in faces:
-
-            cv2.rectangle(frame,(fx,fy),(fx+fw,fy+fh),(255,0,0),2)
-
-            face_gray = gray[fy:fy+fh, fx:fx+fw]
-            face_color = frame[fy:fy+fh, fx:fx+fw]
-
-            eyes = eye_cascade.detectMultiScale(face_gray,1.1,3)
-
-            for (x,y,w,h) in eyes:
-
-                cv2.rectangle(face_color,(x,y),(x+w,y+h),(0,255,0),2)
-
-                eye = face_color[y:y+h, x:x+w]
-                eye = cv2.resize(eye,(64,64))
-                eye = eye/255.0
-                eye = np.expand_dims(eye,axis=0)
-
-                pred = model.predict(eye,verbose=0)[0][0]
-
-                if pred < 0.5:
-                    status="Closed"
-                    color=(0,0,255)
-                else:
-                    status="Open"
-                    color=(0,255,0)
-
-                break
-
-        if status=="Closed":
-
-            if closed_start is None:
-                closed_start=time.time()
-
-            if time.time()-closed_start>2:
-                alarm = True
-        else:
-            closed_start=None
-
-        alarm_status = alarm
-
-        cv2.putText(frame,"Eyes: "+status,(40,50),
-        cv2.FONT_HERSHEY_SIMPLEX,1,color,2)
-
-        if alarm:
-            cv2.putText(frame,"DROWSY!",(40,100),
-            cv2.FONT_HERSHEY_SIMPLEX,1,(0,0,255),2)
-
-        ret, buffer = cv2.imencode('.jpg', frame)
-        frame = buffer.tobytes()
-
-        yield (b'--frame\r\n'
-        b'Content-Type: image/jpeg\r\n\r\n'+frame+b'\r\n')
-
-@app.route('/')
+@app.route("/", methods=["GET", "POST"])
 def index():
-    return render_template('index.html')
+    prediction = None
 
-@app.route('/video')
-def video():
-    return Response(generate_frames(),
-    mimetype='multipart/x-mixed-replace; boundary=frame')
+    if request.method == "POST":
+        file = request.files["file"]
+        if file:
+            file_bytes = np.frombuffer(file.read(), np.uint8)
+            img = cv2.imdecode(file_bytes, cv2.IMREAD_COLOR)
 
-@app.route('/alarm')
-def alarm():
-    global alarm_status
-    return str(alarm_status)
+            processed = prepare_image(img)
+            pred = model.predict(processed)[0][0]
+
+            if pred < 0.5:
+                prediction = "Closed Eyes (Drowsy)"
+            else:
+                prediction = "Open Eyes"
+
+    return render_template("index.html", prediction=prediction)
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
