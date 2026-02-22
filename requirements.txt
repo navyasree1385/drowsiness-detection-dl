@@ -1,6 +1,6 @@
 flask
 flask-cors
-opencv-python
-tensorflow
+opencv-python-headless
 numpy
+tensorflow-cpu==2.13.0
 gunicorn
