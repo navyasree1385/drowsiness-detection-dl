@@ -8,7 +8,8 @@ import os
 app = Flask(__name__)
 
 # Load Model
-model = tf.keras.models.load_model("model/drowsiness_model.h5", compile=False)
+model = tf.keras.models.load_model("model/drowsiness_model.h5", compile=False,
+safe_mode=False)
 
 # Haar Cascades
 face_cascade = cv2.CascadeClassifier(
