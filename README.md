@@ -175,7 +175,6 @@ drowsiness_model.h5
 * Improve detection accuracy using **larger datasets**
 * Use **Eye Aspect Ratio (EAR)** for better detection
 * Implement **driver monitoring dashboard**
-* Deploy using **Docker / Cloud**
 
 ---
 
