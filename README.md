@@ -187,11 +187,3 @@ B.Tech Student
 GITAM University
 
 ---
-
-If you want, I can also help you add **these 3 things that make your GitHub project look much more professional**:
-
-* ⭐ A **project banner image**
-* ⭐ **screenshots section** in README
-* ⭐ **demo GIF for GitHub**
-
-They make the project look 10× more impressive during internships and hackathons.
