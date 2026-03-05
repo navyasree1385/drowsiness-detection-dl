@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Drowsiness Detection</title>
+</head>
+
+<body>
+
+<h2>Drowsiness Detection System</h2>
+
+<img src="/video" width="640" height="480">
+
+<audio id="alarmSound">
+<source src="/static/alarm.wav" type="audio/wav">
+</audio>
+
+<script>
+setInterval(function(){
+fetch('/alarm')
+.then(res=>res.text())
+.then(data=>{
+if(data=="True"){
+document.getElementById("alarmSound").play();
+}
+});
+},500);
+</script>
+
+</body>
+</html>
