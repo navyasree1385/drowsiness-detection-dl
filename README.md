@@ -111,7 +111,7 @@ Drowsiness-Detection-System
 ### 1️⃣ Clone the repository
 
 ```bash
-git clone https://github.com/yourusername/drowsiness-detection-system.git
+git clone https://github.com/navyasree1385/drowsiness-detection-system.git
 cd drowsiness-detection-system
 ```
 
@@ -173,7 +173,6 @@ drowsiness_model.h5
 # 📊 Future Improvements
 
 * Improve detection accuracy using **larger datasets**
-* Add **Mobile App integration**
 * Use **Eye Aspect Ratio (EAR)** for better detection
 * Implement **driver monitoring dashboard**
 * Deploy using **Docker / Cloud**
